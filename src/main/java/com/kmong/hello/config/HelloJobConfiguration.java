@@ -2,6 +2,7 @@ package com.kmong.hello.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -32,7 +33,10 @@ public class HelloJobConfiguration {
                 .tasklet(new Tasklet() {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-                        System.out.println("Hello Spring Batch");
+                        JobParameters jobParameters = contribution.getStepExecution().getJobParameters();
+                        String name = jobParameters.getString("name");
+
+                        System.out.println(String.format("Hello Spring Batch to %s", name));
                         return RepeatStatus.FINISHED;
                     }
                 }).build();
@@ -42,7 +46,10 @@ public class HelloJobConfiguration {
     public Step goodByeStep() {
         return stepBuilderFactory.get("goodByeStep")
                 .tasklet((contribution, chunkContext) -> {
-                    System.out.println("Goodbye Spring Batch");
+                    JobParameters jobParameters = contribution.getStepExecution().getJobParameters();
+                    String name = jobParameters.getString("name");
+
+                    System.out.println(String.format("Goodbye Spring Batch to %s", name));
                     return RepeatStatus.FINISHED;
                 }).build();
     }
