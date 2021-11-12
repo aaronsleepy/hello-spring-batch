@@ -19,10 +19,10 @@ public class HelloJobConfiguration {
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job helloJob() {
+    public Job helloJob(Step helloStep, Step goodByeStep) {
         return jobBuilderFactory.get("helloJob")
-                .start(helloStep())
-                .next(goodByeStep())
+                .start(helloStep)
+                .next(goodByeStep)
                 .build();
     }
 
