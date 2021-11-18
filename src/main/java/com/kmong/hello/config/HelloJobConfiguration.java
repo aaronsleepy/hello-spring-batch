@@ -9,6 +9,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +38,12 @@ public class HelloJobConfiguration {
                         String name = jobParameters.getString("name");
 
                         System.out.println(String.format("Hello Spring Batch to %s", name));
+
+                        ExecutionContext stepExecutionContext = contribution.getStepExecution().getExecutionContext();
+                        ExecutionContext jobExecutionContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
+
+                        jobExecutionContext.put("job-name", "helloJob");
+                        stepExecutionContext.put("step1-name", "helloStep");
                         return RepeatStatus.FINISHED;
                     }
                 }).build();
@@ -48,8 +55,13 @@ public class HelloJobConfiguration {
                 .tasklet((contribution, chunkContext) -> {
                     JobParameters jobParameters = contribution.getStepExecution().getJobParameters();
                     String name = jobParameters.getString("name");
-
                     System.out.println(String.format("Goodbye Spring Batch to %s", name));
+
+                    ExecutionContext stepExecutionContext = contribution.getStepExecution().getExecutionContext();
+                    ExecutionContext jobExecutionContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
+
+                    System.out.println(String.format("job-name: %s", jobExecutionContext.get("job-name")));
+                    System.out.println(String.format("step1-name: %s", jobExecutionContext.get("step1-name")));
                     return RepeatStatus.FINISHED;
                 }).build();
     }
