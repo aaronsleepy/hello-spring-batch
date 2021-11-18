@@ -1,10 +1,7 @@
 package com.kmong.hello.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -19,10 +16,12 @@ import org.springframework.context.annotation.Configuration;
 public class HelloJobConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
+    private final JobExecutionListener helloJobExecutionListener;
 
     @Bean
     public Job helloJob(Step helloStep, Step goodByeStep) {
         return jobBuilderFactory.get("helloJob")
+                .listener(helloJobExecutionListener)
                 .start(helloStep)
                 .next(goodByeStep)
                 .build();
