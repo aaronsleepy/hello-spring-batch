@@ -13,48 +13,48 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-public class HelloJobConfiguration {
+public class BonjourJobConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final JobExecutionListener helloJobExecutionListener;
 
     @Bean
-    public Job helloJob(Step helloStep, Step goodByeStep) {
-        return jobBuilderFactory.get("helloJob")
+    public Job bonjourJob(Step bonjourStep, Step auRevoirStep) {
+        return jobBuilderFactory.get("bonjourJob")
 //                .listener(helloJobExecutionListener)
-                .start(helloStep)
-                .next(goodByeStep)
+                .start(bonjourStep)
+                .next(auRevoirStep)
                 .build();
     }
 
     @Bean
-    public Step helloStep() {
-        return stepBuilderFactory.get("helloStep")
+    public Step bonjourStep() {
+        return stepBuilderFactory.get("bonjourStep")
                 .tasklet(new Tasklet() {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
                         JobParameters jobParameters = contribution.getStepExecution().getJobParameters();
                         String name = jobParameters.getString("name");
 
-                        System.out.println(String.format("Hello Spring Batch to %s", name));
+                        System.out.println(String.format("Bonjour Spring Batch to %s", name));
 
                         ExecutionContext stepExecutionContext = contribution.getStepExecution().getExecutionContext();
                         ExecutionContext jobExecutionContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
 
-                        jobExecutionContext.put("job-name", "helloJob");
-                        stepExecutionContext.put("step1-name", "helloStep");
+                        jobExecutionContext.put("job-name", "bonjourJob");
+                        stepExecutionContext.put("step1-name", "bonjourStep");
                         return RepeatStatus.FINISHED;
                     }
                 }).build();
     }
 
     @Bean
-    public Step goodByeStep() {
-        return stepBuilderFactory.get("goodByeStep")
+    public Step auRevoirStep() {
+        return stepBuilderFactory.get("auRevoirStep")
                 .tasklet((contribution, chunkContext) -> {
                     JobParameters jobParameters = contribution.getStepExecution().getJobParameters();
                     String name = jobParameters.getString("name");
-                    System.out.println(String.format("Goodbye Spring Batch to %s", name));
+                    System.out.println(String.format("Au revoir Spring Batch to %s", name));
 
                     ExecutionContext stepExecutionContext = contribution.getStepExecution().getExecutionContext();
                     ExecutionContext jobExecutionContext = contribution.getStepExecution().getJobExecution().getExecutionContext();
