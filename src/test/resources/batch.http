@@ -5,3 +5,11 @@ Content-Type: application/json
 {
   "name": "aaron"
 }
+
+### Send POST rquest with json body
+POST http://localhost:8080/hello/async
+Content-Type: application/json
+
+{
+  "name": "aaron"
+}
