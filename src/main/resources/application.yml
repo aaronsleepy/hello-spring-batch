@@ -3,4 +3,5 @@ spring:
     jdbc:
       initialize-schema: embedded
     job:
-      enabled: false
+      names: bonjourJob
+#      enabled: false
