@@ -1,0 +1,7 @@
+### Send POST rquest with json body
+POST http://localhost:8080/hello
+Content-Type: application/json
+
+{
+  "name": "aaron"
+}
