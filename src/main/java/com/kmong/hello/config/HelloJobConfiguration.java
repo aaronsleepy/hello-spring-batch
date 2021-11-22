@@ -17,11 +17,13 @@ public class HelloJobConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final JobExecutionListener helloJobExecutionListener;
+    private final JobParametersValidator helloJobParametersValidator;
 
     @Bean
     public Job helloJob(Step helloStep, Step goodByeStep) {
         return jobBuilderFactory.get("helloJob")
-//                .listener(helloJobExecutionListener)
+                .listener(helloJobExecutionListener)
+                .validator(helloJobParametersValidator)
                 .start(helloStep)
                 .next(goodByeStep)
                 .build();
