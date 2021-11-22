@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
@@ -16,12 +17,20 @@ import org.springframework.context.annotation.Configuration;
 public class BonjourJobConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final JobExecutionListener helloJobExecutionListener;
 
     @Bean
-    public Job bonjourJob(Step bonjourStep, Step auRevoirStep) {
+    public JobParametersValidator bonjourJobParameteresValidator() {
+        DefaultJobParametersValidator jobParametersValidator = new DefaultJobParametersValidator();
+        jobParametersValidator.setRequiredKeys(new String[] { "name" });
+        jobParametersValidator.setOptionalKeys(new String[] { "region" });
+        return jobParametersValidator;
+    }
+
+    @Bean
+    public Job bonjourJob(Step bonjourStep, Step auRevoirStep,
+                          JobParametersValidator bonjourJobParameteresValidator) {
         return jobBuilderFactory.get("bonjourJob")
-//                .listener(helloJobExecutionListener)
+                .validator(bonjourJobParameteresValidator)
                 .start(bonjourStep)
                 .next(auRevoirStep)
                 .build();
