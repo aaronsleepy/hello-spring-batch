@@ -7,9 +7,13 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Arrays;
 
 @Configuration
 @RequiredArgsConstructor
@@ -20,12 +24,13 @@ public class HelloJobConfiguration {
     private final JobParametersValidator helloJobParametersValidator;
 
     @Bean
-    public Job helloJob(Step helloStep, Step goodByeStep) {
+    public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep) {
         return jobBuilderFactory.get("helloJob")
                 .listener(helloJobExecutionListener)
-                .validator(helloJobParametersValidator)
+//                .validator(helloJobParametersValidator)
                 .start(helloStep)
                 .next(goodByeStep)
+                .next(seeYaStep)
                 .build();
     }
 
@@ -65,5 +70,22 @@ public class HelloJobConfiguration {
                     System.out.println(String.format("step1-name: %s", jobExecutionContext.get("step1-name")));
                     return RepeatStatus.FINISHED;
                 }).build();
+    }
+
+    @Bean
+    public Step seeYaStep() {
+        return stepBuilderFactory.get("seeYaStep")
+                .<String, String>chunk(5)
+                .reader(new ListItemReader<>(Arrays.asList("Daniel", "Mincho", "Morty", "Coo")))
+                .processor(new ItemProcessor<String, String>() {
+                    @Override
+                    public String process(String item) throws Exception {
+                        return "SeeYa " + item;
+                    }
+                })
+                .writer(items -> {
+                    items.forEach(s -> System.out.println(s));
+                })
+                .build();
     }
 }
