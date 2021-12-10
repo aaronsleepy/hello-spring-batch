@@ -1,19 +1,31 @@
 package com.kmong.hello.config;
 
+import com.kmong.hello.vo.CustomerVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.LineMapper;
+import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.jsr.item.ItemReaderAdapter;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
@@ -24,13 +36,15 @@ public class HelloJobConfiguration {
     private final JobParametersValidator helloJobParametersValidator;
 
     @Bean
-    public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep) {
+    public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep,
+                        Step longTimeNoSeeStep) {
         return jobBuilderFactory.get("helloJob")
                 .listener(helloJobExecutionListener)
 //                .validator(helloJobParametersValidator)
                 .start(helloStep)
                 .next(goodByeStep)
                 .next(seeYaStep)
+                .next(longTimeNoSeeStep)
                 .build();
     }
 
@@ -86,6 +100,32 @@ public class HelloJobConfiguration {
                 .writer(items -> {
                     items.forEach(s -> System.out.println(s));
                 })
+                .build();
+    }
+
+    @Bean
+    public Step longTimeNoSeeStep(ItemReader<CustomerVO> longTimeNoSeeReader) {
+        return stepBuilderFactory.get("longTimeNoSeeStep")
+                .<CustomerVO, CustomerVO>chunk(2)
+                .reader(longTimeNoSeeReader)
+                .writer(items -> {
+                    System.out.println("Chunk processed >>>>>>>");
+                    items.forEach(System.out::println);
+                })
+                .build();
+    }
+
+    @Bean
+    public ItemReader<CustomerVO> longTimeNoSeeReader() {
+        DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer(",");
+        delimitedLineTokenizer.setNames(new String[] { "name", "age", "type"});
+
+        return (new FlatFileItemReaderBuilder<CustomerVO>())
+                .name("longTimeNoSeeReader")
+                .resource(new FileSystemResource("items/customer.csv"))
+//                .lineMapper(new DefaultLineMapper())
+                .lineTokenizer(delimitedLineTokenizer)
+                .targetType(CustomerVO.class)
                 .build();
     }
 }
