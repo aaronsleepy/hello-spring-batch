@@ -16,6 +16,7 @@ import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.mapping.JsonLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.jsr.item.ItemReaderAdapter;
@@ -37,7 +38,7 @@ public class HelloJobConfiguration {
 
     @Bean
     public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep,
-                        Step longTimeNoSeeStep) {
+                        Step longTimeNoSeeStep, Step whatsUpStep) {
         return jobBuilderFactory.get("helloJob")
                 .listener(helloJobExecutionListener)
 //                .validator(helloJobParametersValidator)
@@ -45,6 +46,7 @@ public class HelloJobConfiguration {
                 .next(goodByeStep)
                 .next(seeYaStep)
                 .next(longTimeNoSeeStep)
+                .next(whatsUpStep)
                 .build();
     }
 
@@ -116,6 +118,18 @@ public class HelloJobConfiguration {
     }
 
     @Bean
+    public Step whatsUpStep(ItemReader<Map<String, Object>> whatsUpReader) {
+        return stepBuilderFactory.get("whatsUpStep")
+                .<Map<String, Object>, Map<String, Object>>chunk(2)
+                .reader(whatsUpReader)
+                .writer(items -> {
+                    System.out.println("Chunk processed >>>>>>>");
+                    items.forEach(System.out::println);
+                })
+                .build();
+    }
+
+    @Bean
     public ItemReader<CustomerVO> longTimeNoSeeReader() {
         DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer(",");
         delimitedLineTokenizer.setNames(new String[] { "name", "age", "type"});
@@ -126,6 +140,15 @@ public class HelloJobConfiguration {
 //                .lineMapper(new DefaultLineMapper())
                 .lineTokenizer(delimitedLineTokenizer)
                 .targetType(CustomerVO.class)
+                .build();
+    }
+
+    @Bean
+    public ItemReader<Map<String, Object>> whatsUpReader() {
+        return (new FlatFileItemReaderBuilder<Map<String, Object>>())
+                .name("longTimeNoSeeReader")
+                .resource(new FileSystemResource("items/customer.data"))
+                .lineMapper(new JsonLineMapper())
                 .build();
     }
 }
