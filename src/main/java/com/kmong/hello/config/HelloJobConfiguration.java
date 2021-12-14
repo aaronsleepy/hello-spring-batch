@@ -43,7 +43,8 @@ public class HelloJobConfiguration {
     public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep,
                         Step longTimeNoSeeStep, Step whatsUpStep,
                         Step dropBeatStep,
-                        Step boombapStep) {
+                        Step boombapStep,
+                        Step trapStep) {
         return jobBuilderFactory.get("helloJob")
                 .listener(helloJobExecutionListener)
 //                .validator(helloJobParametersValidator)
@@ -54,6 +55,7 @@ public class HelloJobConfiguration {
                 .next(whatsUpStep)
                 .next(dropBeatStep)
                 .next(boombapStep)
+                .next(trapStep)
                 .build();
     }
 
@@ -165,6 +167,16 @@ public class HelloJobConfiguration {
     }
 
     @Bean
+    public Step trapStep(ItemReader<Customer> dropBeatReader,
+                         ItemWriter<? super Customer> trapWriter) {
+        return stepBuilderFactory.get("trapStep")
+                .<Customer, Customer>chunk(5)
+                .reader(dropBeatReader)
+                .writer(trapWriter)
+                .build();
+    }
+
+    @Bean
     public ItemReader<CustomerVO> longTimeNoSeeReader() {
         DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer(",");
         delimitedLineTokenizer.setNames(new String[] { "name", "age", "type"});
@@ -208,4 +220,15 @@ public class HelloJobConfiguration {
                 .build();
     }
 
+    @Bean
+    public ItemWriter<? super Customer> trapWriter() {
+        return new FlatFileItemWriterBuilder<>()
+                .name("trapWriter")
+                .resource(new FileSystemResource("items/customer-trap.out"))
+                .append(false)
+                .shouldDeleteIfExists(true)
+                .delimited().delimiter("|")
+                .names("name", "age", "type", "createdAt", "updatedAt")
+                .build();
+    }
 }
