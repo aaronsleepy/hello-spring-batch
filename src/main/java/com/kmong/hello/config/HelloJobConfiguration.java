@@ -1,5 +1,6 @@
 package com.kmong.hello.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kmong.hello.domain.Customer;
 import com.kmong.hello.vo.CustomerVO;
 import lombok.RequiredArgsConstructor;
@@ -11,10 +12,13 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
 import org.springframework.batch.item.file.mapping.JsonLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
@@ -33,11 +37,13 @@ public class HelloJobConfiguration {
     private final JobExecutionListener helloJobExecutionListener;
     private final JobParametersValidator helloJobParametersValidator;
     private final EntityManagerFactory entityManagerFactory;
+    private final ObjectMapper mapper;
 
     @Bean
     public Job helloJob(Step helloStep, Step goodByeStep, Step seeYaStep,
                         Step longTimeNoSeeStep, Step whatsUpStep,
-                        Step dropBeatStep) {
+                        Step dropBeatStep,
+                        Step boombapStep) {
         return jobBuilderFactory.get("helloJob")
                 .listener(helloJobExecutionListener)
 //                .validator(helloJobParametersValidator)
@@ -47,6 +53,7 @@ public class HelloJobConfiguration {
                 .next(longTimeNoSeeStep)
                 .next(whatsUpStep)
                 .next(dropBeatStep)
+                .next(boombapStep)
                 .build();
     }
 
@@ -142,6 +149,22 @@ public class HelloJobConfiguration {
     }
 
     @Bean
+    public Step boombapStep(ItemReader<Customer> dropBeatReader,
+                            ItemWriter<String> boombapWriter) {
+        return stepBuilderFactory.get("boombapStep")
+                .<Customer, String>chunk(5)
+                .reader(dropBeatReader)
+                .processor(new ItemProcessor<Customer, String>() {
+                    @Override
+                    public String process(Customer item) throws Exception {
+                        return mapper.writeValueAsString(item);
+                    }
+                })
+                .writer(boombapWriter)
+                .build();
+    }
+
+    @Bean
     public ItemReader<CustomerVO> longTimeNoSeeReader() {
         DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer(",");
         delimitedLineTokenizer.setNames(new String[] { "name", "age", "type"});
@@ -173,4 +196,16 @@ public class HelloJobConfiguration {
                 .queryString("select c from Customer c")
                 .build();
     }
+
+    @Bean
+    public ItemWriter<String> boombapWriter() {
+        return new FlatFileItemWriterBuilder<String>()
+                .name("boombapWriter")
+                .resource(new FileSystemResource("items/customer.out"))
+                .append(false)
+                .shouldDeleteIfExists(true)
+                .lineAggregator(new PassThroughLineAggregator<>())
+                .build();
+    }
+
 }
