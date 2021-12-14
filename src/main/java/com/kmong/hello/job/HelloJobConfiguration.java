@@ -1,4 +1,4 @@
-package com.kmong.hello.config;
+package com.kmong.hello.job;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kmong.hello.domain.Customer;
@@ -36,7 +36,7 @@ public class HelloJobConfiguration {
     private final StepBuilderFactory stepBuilderFactory;
     private final JobExecutionListener helloJobExecutionListener;
     private final JobParametersValidator helloJobParametersValidator;
-    private final EntityManagerFactory entityManagerFactory;
+    private final EntityManagerFactory itemEntityManagerFactory;
     private final ObjectMapper mapper;
 
     @Bean
@@ -203,7 +203,7 @@ public class HelloJobConfiguration {
     public ItemReader<Customer> dropBeatReader() {
         return new JpaPagingItemReaderBuilder()
                 .name("dropBeatReader")
-                .entityManagerFactory(entityManagerFactory)
+                .entityManagerFactory(itemEntityManagerFactory)
                 .pageSize(5)
                 .queryString("select c from Customer c")
                 .build();

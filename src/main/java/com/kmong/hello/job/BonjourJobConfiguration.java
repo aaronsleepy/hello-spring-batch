@@ -1,4 +1,4 @@
-package com.kmong.hello.config;
+package com.kmong.hello.job;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
